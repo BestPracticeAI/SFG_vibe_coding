@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="eyebrow">Customer order lookup</p>
+<h1>Orders by customer</h1>
+
+{% if me %}
+<section class="access">
+  {% for c in companies %}
+  <span class="chip {{ 'ok' if c.open else 'off' }}" title="{{ c.reason if not c.open else (c.name ~ ' · costs ' ~ ('visible' if c.cost_visible is mapping and c.cost_visible.OE else 'masked')) }}">
+    {{ c.code }}{% if c.open %} · open{% if c.cost_visible is mapping %} · costs {{ 'visible' if c.cost_visible.OE else 'masked' }}{% endif %}{% else %} · no access{% endif %}
+  </span>
+  {% endfor %}
+</section>
+
+<form method="get" action="{{ url_for('orders.index') }}" class="bar">
+  <label>Company
+    <select name="company">
+      {% for c in companies if c.open %}<option value="{{ c.code }}" {{ 'selected' if c.code == q.company }}>{{ c.code }} · {{ c.name }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="grow">Customer number
+    <input name="customer" value="{{ q.customer }}" placeholder="e.g. CUT001" autocomplete="off" required>
+  </label>
+  <label class="check"><input type="checkbox" name="quotes" value="1" {{ 'checked' if q.quotes }}> include quotes</label>
+  <button class="btn" type="submit">Look up</button>
+</form>
+{% endif %}
+
+{% if error %}
+<div class="notice bad" role="alert">
+  <b>Sage said no.</b> {{ error }}
+  <br><span class="small">This app does not work around a refusal. Rights for data you cannot see come from {{ humans.access }}; data no view holds is a request to {{ humans.views }}.</span>
+</div>
+{% endif %}
+
+{% if result %}
+{% set s = result.summary %}
+<section class="metrics">
+  <div class="metric"><span class="n">{{ s.orders }}</span><span class="l">orders for {{ s.customer }}</span><span class="s">{{ s.complete_orders }} complete</span></div>
+  <div class="metric"><span class="n">{{ s.invoiced_before_tax|cell }}</span><span class="l">invoiced before tax</span><span class="s">from invoices posted against the orders</span></div>
+  <div class="metric"><span class="n">{{ s.invoiced_with_tax|cell }}</span><span class="l">invoiced with tax</span><span class="s">&nbsp;</span></div>
+  <div class="metric"><span class="n">{{ s.first_order or '—' }}</span><span class="l">first order</span><span class="s">last {{ s.last_order or '—' }}</span></div>
+</section>
+{% if result.masked_columns %}<div class="notice warn">Columns masked by Sage for your role: {{ result.masked_columns|join(', ') }}.</div>{% endif %}
+{% if result.rows %}
+<div class="tablewrap"><table>
+  <thead><tr>{% for c in result.columns %}<th>{{ c|label }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for r in result.rows %}<tr>{% for v in r %}<td class="{{ 'num' if v is number and v is not boolean }}">{{ v|cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table></div>
+<p class="small muted">{{ result.rows|length }} row{{ '' if result.rows|length == 1 else 's' }}{% if result.truncated %} (truncated){% endif %} in {{ q.company }}{{ ', quotes included' if q.quotes else ', orders only' }}.</p>
+{% else %}
+<div class="notice">No {{ 'orders or quotes' if q.quotes else 'orders' }} for {{ s.customer }} in {{ q.company }}.</div>
+{% endif %}
+{% elif me and not error %}
+<p class="muted">Enter a customer number to see its orders, invoiced totals and what is still to invoice.</p>
+{% endif %}
+{% endblock %}

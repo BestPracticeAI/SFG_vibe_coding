@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ app_name }}{% endblock %} · SFG</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
+</head>
+<body>
+<header class="topbar"><div class="in">
+  <a class="brandmark" href="{{ url_for('orders.index') }}">SFG {{ app_name }} <small>read-only via Sage MCP</small></a>
+  <span class="grow"></span>
+  {% if me %}
+  <span class="who" title="{{ me.sage_user or 'no Sage user' }} · {{ me.sql_login }}">{{ me.label or me.token_id }}{% if me.sage_user %} · {{ me.sage_user }}{% endif %}</span>
+  <form method="post" action="{{ url_for('orders.signout') }}"><button class="btn ghost" type="submit">Sign out</button></form>
+  {% endif %}
+</div></header>
+<main class="wrap">
+{% block body %}{% endblock %}
+</main>
+<footer class="foot"><div class="in">
+  <span>{{ app_name }} · data read through the Sage 300 MCP with your own token; nothing is written to Sage.</span>
+  <span><a href="{{ handover }}">Handover documentation</a>{% if me %} · signed in as {{ me.label or me.token_id }}{% endif %}</span>
+</div></footer>
+</body>
+</html>

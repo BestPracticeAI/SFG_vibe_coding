@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ app_name }}{% endblock %}
+{% block body %}
+<section class="card narrow">
+  <p class="eyebrow">Sign in</p>
+  <h1>Customer orders</h1>
+  <p class="lede">Look up a customer’s orders and quotes without opening Sage. Paste the Sage access token you were issued; every lookup runs with your own rights.</p>
+  {% if message %}<div class="notice bad" role="alert">{{ message }}</div>{% endif %}
+  <form method="post" action="{{ url_for('orders.signin') }}" class="stack">
+    <label for="token">Sage access token</label>
+    <input id="token" name="token" type="password" autocomplete="off" required placeholder="paste your token">
+    <button class="btn" type="submit">Sign in</button>
+  </form>
+  <p class="small muted">No token? Ask the platform champion named in the skill file. The token is kept in a browser cookie for 8 hours and sent only to this app.</p>
+</section>
+{% endblock %}

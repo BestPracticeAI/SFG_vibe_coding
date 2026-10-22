@@ -1,0 +1,23 @@
+[Unit]
+Description=SFG Customer Orders dashboard (gunicorn, read-only via the Sage MCP)
+After=network.target sage-mcp.service
+Wants=sage-mcp.service
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/opt/sfg-vibe-coding/projects/customer-orders
+Environment=MCP_URL=http://127.0.0.1:8765/mcp
+Environment=APP_PREFIX=/customer-orders
+ExecStart=/opt/sfg-vibe-coding/projects/customer-orders/.venv/bin/gunicorn --bind 127.0.0.1:8102 --workers 1 --threads 4 --timeout 60 --access-logfile - --error-logfile - app:app
+Restart=always
+RestartSec=3
+MemoryMax=192M
+Nice=5
+ProtectSystem=strict
+ReadOnlyPaths=/opt/sfg-vibe-coding
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

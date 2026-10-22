@@ -1,0 +1,19 @@
+[Unit]
+Description=Sage 300 mock MCP server (Streamable HTTP, bearer token per request)
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/mock-sage-300
+ExecStart=/home/ec2-user/mock-sage-300/.venv/bin/python -m sage_mcp.server --http --host 127.0.0.1 --port 8765
+Restart=always
+RestartSec=3
+MemoryMax=256M
+Nice=5
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
