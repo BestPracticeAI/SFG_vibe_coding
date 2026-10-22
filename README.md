@@ -6,8 +6,10 @@ writes nothing to Sage, and is published beside the others under `https://44.218
 
 **How to build one:** open the shared session in this repository, load the skill
 `.claude/skills/sfg-vibe-coding/SKILL.md` (it loads itself when the session starts here), and describe
-what you need. The skill file holds the rules: read-only, the token decides, views only, named people
-for writes and new views, the house look, how to publish and how to hand over.
+what you need. The skill file is the complete runbook: how to reach the MCP and what each tool
+returns, how privileges follow the token, the project layout and house look, the GitHub structure,
+the deploy templates (service unit, nginx location, install script), the two requests that go through
+named people, and the definition of done the session checks before it reports a tool as finished.
 
 ## Project index
 
@@ -23,7 +25,7 @@ Reserved: 8765 is the Sage MCP server (`sage-mcp.service`); 8000 is the knowledg
 ## Layout
 
 ```
-.claude/skills/sfg-vibe-coding/SKILL.md   the contract every session follows
+.claude/skills/sfg-vibe-coding/SKILL.md   the contract every session follows; templates/ beside it hold the deploy files
 projects/<name>/                           one folder per app: code, tests, deploy/, README.md (handover)
 ```
 

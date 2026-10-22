@@ -1,0 +1,25 @@
+# systemd unit for an SFG vibe-coding tool. Replace <name> and <port>; save as deploy/sfg-<name>.service.
+# Skill file section 5.1. Installed by deploy/install.sh.
+[Unit]
+Description=SFG <App name> (read-only dashboard over the Sage 300 MCP)
+After=network.target sage-mcp.service
+Wants=sage-mcp.service
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/opt/sfg-vibe-coding/projects/<name>
+Environment=MCP_URL=http://127.0.0.1:8765/mcp
+Environment=APP_PREFIX=/<name>
+ExecStart=/opt/sfg-vibe-coding/projects/<name>/.venv/bin/gunicorn --bind 127.0.0.1:<port> --workers 1 --threads 4 --timeout 60 --access-logfile - --error-logfile - app:app
+Restart=always
+RestartSec=3
+Nice=5
+MemoryMax=192M
+ProtectSystem=strict
+ReadOnlyPaths=/opt/sfg-vibe-coding
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
