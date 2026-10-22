@@ -204,6 +204,41 @@ with another token, never fill the gap with a guess.
   `sage-mock-intern`) and assert real numbers from the mock estate.
 - The suite passes before the first commit and before every deploy.
 
+### 3.7 The artifact track (no server of its own)
+
+A tool that only reads and shows can be one HTML page published as a Claude artifact instead of a
+Flask app. Choose it when the box has no room for another service, when the audience lives in
+claude.ai anyway, or when the ask is "a page" rather than "an app". Sections 3.1 to 3.3 and 3.6 do not
+apply; 3.4 and 3.5 do. The three live examples: `projects/customer-orders/artifact-page.html`,
+`projects/stock-costs/page.html`, `projects/revenue-by-customer/page.html`.
+
+- **Layout:** `projects/<name>/page.html` (the whole tool: title, style with the house tokens, one
+  script) and `README.md` (section 4.3). No port, no unit, no nginx, no venv.
+- **Access:** `const mcp = await claude.use("mcp")`; `null` means this view cannot reach connectors,
+  so render that state and offer the demo snapshot. Every read is `mcp.callTool("SFG Sage 300", tool,
+  input)` with the viewer's own sign-in; the page never sees a token. Call `whoami` first and draw
+  the access strip from it. Publish with the smallest manifest that names the tools the page calls:
+  `{"mcp": {"servers": [{"server": "SFG Sage 300", "tools": ["whoami", "<tool>"]}]}}`.
+- **Before publishing,** observe one real call per tool on the mock MCP (`python3 -I mcpcall.py
+  <demo token> <tool> '<json>'` or the equivalent) so the page reads the real `columns`, `rows`,
+  `masked_columns`, `summary` and `trace` shapes. Never guess a payload.
+- **States, branched on the error code and never on message text:** `tool_error` is "Sage said no."
+  with the message verbatim (3.5); `needs_reauth` and `server_not_connected` tell the viewer to
+  reconnect or add the connector in Settings → Connectors; `approval_required` offers one button
+  that repeats the call once; `not_in_manifest` and `blocked_by_policy` say the page may not use
+  the connector for this viewer; `server_unavailable` and a retryable `upstream_error` retry once
+  after a short random delay, then show "did not answer". Masked columns are marked in place and a
+  **Why?** button repeats the call with `explain: true` and lists the `MASK` rows of the trace.
+- **Demo snapshot:** the page carries a small snapshot of the mock estate (rows observed from the
+  MCP, fictional roles) for views without a connector, marked as such, and `#demo` on the link
+  opens straight onto it. Remove the snapshot on a real estate.
+- **Change and retire:** edit `page.html`, republish to the same artifact URL from the shared
+  session, commit. Unpublish and remove the index row to retire. Sharing is set from the page's
+  Share menu; until shared, only the publisher can open it.
+- **Register it:** a row in the root README index with the artifact URL and "none (Claude artifact)"
+  for port and service, and the handover README. The knowledge base menu lists only the apps on
+  the box.
+
 ## 4. GitHub structure and handover
 
 ### 4.1 The repository
@@ -247,7 +282,8 @@ contacts (section 7), and a dated changelog.
 
 Everything a deploy needs is in `projects/<name>/deploy/`, generated from `templates/` in this skill
 folder with `<name>`, `<App name>` and `<port>` filled in. A person runs the install script with
-sudo; it must be idempotent, so running it twice changes nothing.
+sudo; it must be idempotent, so running it twice changes nothing. A tool on the artifact track (3.7)
+skips this section except 5.3: its deploy is the publish, and its index row names the artifact URL.
 
 ### 5.1 The service unit, `deploy/sfg-<name>.service`
 
@@ -355,3 +391,8 @@ The session says a tool is done only when every line is true:
 - [ ] Committed and pushed to `main`; push confirmed.
 - [ ] Verified over HTTPS with a token that has rights and one that does not.
 - [ ] Open requests to people listed, with the project owner notified of any view request.
+
+On the artifact track (3.7) the test, deploy, nginx and HTTPS lines become: one real call per tool
+observed before publishing; the smallest manifest; every connector state and the demo snapshot
+exercised in a browser; the artifact published and its URL in the index row; `page.html` and the
+handover README committed and pushed.

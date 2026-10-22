@@ -90,3 +90,12 @@ champion (tokens, deployment).
 ## Changelog
 
 - 2026-10-22: first version. Built, tested and published by the shared session following the skill file.
+
+## Artifact twin (added 22 October 2026)
+
+The same lookup also exists as a Claude artifact, `artifact-page.html` in this folder, published at
+https://claude.ai/artifact/9DK4Vk4zdDKDKx6ZjRSJxd. It has no server of its own: the page declares the
+`mcp` capability for the connector named `SFG Sage 300` (tools `whoami` and `customer_order_history`),
+so claude.ai attaches each viewer's own sign-in and the MCP answers with that person's rights. There is no
+token to paste. Without a reachable connector the page offers a demo snapshot of the mock estate with the
+five demo roles; `#demo` on the link opens straight onto it. Skill file section 2.5 describes the pattern.

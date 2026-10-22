@@ -18,9 +18,13 @@ executive summary at the top. Ports are assigned here; take the next free one.
 
 | Project | What it does | URL | Port | Service | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [customer-orders](projects/customer-orders/README.md) | Look up a customer's orders and quotes, invoiced totals and what is still to invoice, in any company the user may open | https://44.218.227.134/customer-orders/ | 8102 | `sfg-customer-orders` | [project owner] | built and tested; deployed by `deploy/install.sh` |
+| [customer-orders](projects/customer-orders/README.md) | Look up a customer's orders and quotes, invoiced totals and what is still to invoice, in any company the user may open | https://44.218.227.134/customer-orders/ and, as a Claude artifact, https://claude.ai/artifact/9DK4Vk4zdDKDKx6ZjRSJxd | 8102 | `sfg-customer-orders` | [project owner] | built and tested; deployed by `deploy/install.sh`; artifact twin published |
+| [stock-costs](projects/stock-costs/README.md) | Stock and cost check per item and location: quantities on hand, on order and available, with average, recent, standard and total cost where the role may see costs | https://claude.ai/artifact/5AzX3Z5KENp26qec9Ma8Ks | none (Claude artifact) | none | [project owner] | built; demo exercised; connector path unverified until the first viewer signs in |
+| [revenue-by-customer](projects/revenue-by-customer/README.md) | Invoiced revenue per customer for a company and date range, ranked, with cost and margin where the role may see costs | https://claude.ai/artifact/VPqqedbThTcummZw874rzZ | none (Claude artifact) | none | [project owner] | built; demo exercised; connector path unverified until the first viewer signs in |
 
-Reserved: 8765 is the Sage MCP server (`sage-mcp.service`); 8000 is the knowledge base.
+Reserved: 8765 is the Sage MCP server (`sage-mcp.service`); 8000 is the knowledge base. Claude artifacts
+need no port: they reach Sage through the `SFG Sage 300` connector (skill file, section 2.5) and keep
+their page source in `projects/<name>/page.html`.
 
 ## Layout
 

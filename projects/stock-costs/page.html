@@ -1,0 +1,409 @@
+<title>Stock and Cost Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column, 1100px max; slim top bar, access strip, lookup bar, metrics, then the stock ledger with masked cost columns marked in place. */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --surface-2:#eef1f4; --line:#d7dde3;
+  --fg:#17222b; --muted:#5b6b78; --accent:#0f4c81; --accent-ink:#ffffff;
+  --ok:#1e7b4a; --ok-bg:#e4f3ea; --warn:#8a5a00; --warn-bg:#fff3d6; --bad:#9b1c1c; --bad-bg:#fbe7e7;
+  --display:"Fraunces",Georgia,serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121a21; --surface:#1a242d; --surface-2:#223039; --line:#33434f;
+  --fg:#e8edf1; --muted:#9fb0bd; --accent:#7db4e6; --accent-ink:#0b1b2a;
+  --ok:#7fd3a0; --ok-bg:#16341f; --warn:#f0c674; --warn-bg:#3b2d0c; --bad:#f28b8b; --bad-bg:#3d1717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121a21; --surface:#1a242d; --surface-2:#223039; --line:#33434f;
+  --fg:#e8edf1; --muted:#9fb0bd; --accent:#7db4e6; --accent-ink:#0b1b2a;
+  --ok:#7fd3a0; --ok-bg:#16341f; --warn:#f0c674; --warn-bg:#3b2d0c; --bad:#f28b8b; --bad-bg:#3d1717; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);min-height:100%}
+.topbar{border-bottom:1px solid var(--line);background:var(--surface)}
+.in{max-width:1100px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:600;font-size:19px;color:var(--fg);text-decoration:none}
+.brand small{font-family:var(--body);font-weight:400;font-size:13px;color:var(--muted);margin-left:8px}
+.spacer{flex:1}
+.pill{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.pill.warn{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.pill.bad{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+main{max-width:1100px;margin:0 auto;padding-block:22px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+.eyebrow{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+h1{margin:2px 0 0;font-family:var(--display);font-weight:500;font-size:clamp(26px,4vw,34px);line-height:1.15;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.access{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.chip.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.chip.off{text-decoration:line-through;opacity:.75}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,3vw,24px)}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.bar label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.bar .grow{flex:1 1 200px}
+.bar .narrow{flex:0 1 140px}
+select,input[type=text]{font:inherit;font-size:15px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg);min-width:0;width:100%}
+.bar select{width:auto;max-width:100%}
+.btn{padding:9px 16px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:6px;font:inherit;font-size:15px;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line);padding:6px 12px;font-size:14px}
+.btn.small{padding:5px 12px;font-size:13px}
+.btn:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.small{font-size:13px}.muted{color:var(--muted)}
+.try a{color:var(--accent);margin-right:2px}
+.notice{padding:12px 14px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line)}
+.notice.bad{background:var(--bad-bg);border-color:transparent;color:var(--fg)}
+.notice.bad b{color:var(--bad)}
+.notice.warn{background:var(--warn-bg);border-color:transparent}
+.notice .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
+.trace{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.trace li{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.trace code{font-size:12px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;min-width:0}
+.metric .n{font-family:var(--display);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1;overflow-wrap:anywhere}
+.metric .n.masked{color:var(--warn);font-size:20px}
+.metric .l{font-size:13px;color:var(--muted);margin-top:4px}
+.metric .s{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+td.num,th.num{text-align:right}
+th.masked,td.masked{background:var(--warn-bg)}
+th.masked{color:var(--warn)}
+td.masked{color:var(--warn);text-align:center}
+tr:last-child td{border-bottom:0}
+.demo{border-style:dashed}
+.demo-list{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid var(--line)}
+.demo-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.demo-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.demo-role{font-weight:600;font-size:14px}
+code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.foot{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+.foot a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.pill,.chip{transition:background .2s}}
+</style>
+
+<header class="topbar"><div class="in">
+  <span class="brand">SFG Stock and cost check <small>read-only via Sage MCP</small></span>
+  <span class="spacer"></span>
+  <span class="pill" id="status">Connecting…</span>
+  <button class="btn ghost" id="leaveDemo" type="button" hidden>Leave demo mode</button>
+</div></header>
+
+<main>
+  <div>
+    <p class="eyebrow">Inventory lookup</p>
+    <h1>Stock and cost by item and location</h1>
+    <p class="lede">Quantity on hand, on order and available per location, with average, most recent and standard cost. Cost columns appear only when your Sage Inventory Control group ticks Cost Inquiry; the page shows where Sage masked them and why.</p>
+  </div>
+
+  <section id="connect" hidden></section>
+
+  <section id="demoPanel" class="card demo" hidden>
+    <p class="eyebrow">Live demo · mock Sage 300 estate</p>
+    <p class="small">No Sage connector is reachable from this view, so the page runs on a snapshot of the fictional mock estate. Pick a role to see what Sage allows that role.</p>
+    <ul class="demo-list" id="demoRoles"></ul>
+  </section>
+
+  <section class="access" id="access" hidden></section>
+
+  <form class="card bar" id="lookup" hidden>
+    <label>Company
+      <select id="company" name="company"></select>
+    </label>
+    <label class="grow">Item number <span class="muted">(starts with; blank for all)</span>
+      <input type="text" id="item" name="item" placeholder="e.g. 9060" autocomplete="off">
+    </label>
+    <label class="narrow">Location <span class="muted">(blank for all)</span>
+      <input type="text" id="location" name="location" placeholder="e.g. 1" autocomplete="off">
+    </label>
+    <button class="btn" type="submit" id="go">Look up</button>
+  </form>
+  <p class="small muted try" id="try" hidden></p>
+
+  <div id="error" hidden></div>
+  <section class="metrics" id="metrics" hidden></section>
+  <div class="notice warn" id="masked" hidden></div>
+  <div class="tablewrap" id="tablewrap" hidden><table id="table"></table></div>
+  <p class="small muted" id="rowsNote" hidden></p>
+  <p class="muted" id="hint" hidden>Enter an item number, or leave it blank to list every item the company stocks.</p>
+
+  <p class="foot">Cost rights come from the Sage administrator named in the skill file; data no view holds is a request to the Sage champion, with the project owner notified. This page does not work around a masked column or a refusal. · <a href="https://github.com/BestPracticeAI/SFG_vibe_coding/blob/main/projects/stock-costs/README.md">Handover documentation</a></p>
+</main>
+
+<script>
+(function(){
+'use strict';
+const SERVER = 'SFG Sage 300';
+const TOOL = 'item_costs';
+const HUMANS = {
+  access: 'the Sage administrator named in the skill file (access and cost rights)',
+  views: 'the Sage champion named in the skill file (new views), with the project owner notified'
+};
+const SAMPLES = {QUIK:[['5586','1'],['9060',''],['9411','']], USBP:[['USAW',''],['GZ.X','']], USBTST:[['USAW','']]};
+const COST_COLS = new Set(['AvgCost','RecentCost','StdCost','TotalCost']);
+const QTY_COLS = new Set(['QtyOnHand','QtyOnSalesOrder','QtyOnPurchaseOrder','QtyCommitted','QtyAvailable']);
+
+/* Snapshot of the fictional mock estate (rows observed from the mock MCP), used only when no connector answers. Remove on a real estate. */
+const DEMO = {"columns":["Company","ItemNo","Description","Category","Location","QtyOnHand","QtyOnSalesOrder","QtyOnPurchaseOrder","QtyCommitted","QtyAvailable","AvgCost","RecentCost","StdCost","TotalCost"],"rows":{"QUIK":[["QUIK","5586","Assembly - Auto-Lock Handle","ACC","1",1715.0,0.0,0.0,0.0,1715.0,61.05,61.05,59.22,104700.75],["QUIK","5586","Assembly - Auto-Lock Handle","ACC","2",0.0,2.0,0.0,0.0,0.0,null,61.05,59.22,0.0],["QUIK","5594","SVC. - FM COMPLETE SET OF STRAPS","ACC","1",7.0,1.0,0.0,0.0,7.0,17.9,17.9,17.36,125.3],["QUIK","5594","SVC. - FM COMPLETE SET OF STRAPS","ACC","2",1.0,1.0,0.0,0.0,1.0,17.9,17.9,17.36,17.9],["QUIK","9045-BR","SC-3030B-R - Drive Thru Window","DTW","1",2.0,3.0,0.0,0.0,2.0,418.2,418.2,405.65,836.4],["QUIK","9060-BL","SC-4030B-L - Drive Thru Window","DTW","1",4.0,1.0,0.0,0.0,4.0,372.5,372.5,361.32,1490.0],["QUIK","9184-BL","SCT-4860 Self-Closing Transaction Window - Black (*)","TRX","1",4.0,1.0,0.0,0.0,4.0,1045.14,1045.14,1013.79,4180.56],["QUIK","9344","Air Curtain - 36 in. (*)","AIR","1",4.0,1.0,0.0,0.0,4.0,514.0,514.0,498.58,2056.0],["QUIK","9345","Air Curtain - 48 in. (*)","AIR","1",4.0,1.0,0.0,0.0,4.0,840.0,840.0,814.8,3360.0],["QUIK","9411-BR","Miami Dade Approved Drive Thru Window - Bronze (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,1110.46,1110.46,1077.15,4441.84],["QUIK","9501","IFSC - Sliding Self-Closing Window (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,807.61,807.61,783.38,3230.44],["QUIK","9507-CL","SS - Manual Slider Window - Clear (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,1907.87,1907.87,1850.63,7631.48],["QUIK","9647-CL","IFT-4860 Transaction Window - Clear (*)","TRX","1",4.0,1.0,0.0,0.0,4.0,1485.67,1485.67,1441.1,5942.68],["QUIK","9679-BX","IFBPSC Bullet Resistant Self-Closing Window - BX (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,1085.82,1085.82,1053.25,4343.28],["QUIK","9900-BR","SST-104 Stainless Transaction Window - Bronze (*)","TRX","1",4.0,1.0,0.0,0.0,4.0,2852.29,2852.29,2766.72,11409.16],["QUIK","9908-CV","PTWAEN Pass-Thru Window with Air Enclosure - CV (*)","TRX","1",4.0,1.0,0.0,0.0,4.0,2021.03,2021.03,1960.4,8084.12],["QUIK","9913","Vertical Sliding Drive Thru Window (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,927.83,927.83,900.0,3711.32],["QUIK","9913-CX","Vertical Sliding Drive Thru Window - CX (*)","DTW","1",4.0,1.0,0.0,0.0,4.0,784.56,784.56,761.02,3138.24],["QUIK","MO4419","4419 - Swing Door Manufacturing Order (*)","MO","1",4.0,1.0,0.0,0.0,4.0,0.0,0.0,0.0,0.0]],"USBP":[["USBP","APCX.BGD-17","(BGD-17) Glass bead","ACC","1",0.0,0.0,0.0,0.0,0.0,null,21.1,21.1,0.0],["USBP","BLAST ANALYSIS","3RD PARTY BLAST ANALYSIS/ CALCS / SHOP DRAWINGS","BLAST","1",0.0,0.0,0.0,0.0,0.0,null,48000.0,48000.0,0.0],["USBP","GZ.X.L3.1-21.GCP","L3 glazing - 1-21 GCP make-up","DOMDRG","1",0.0,0.0,0.0,0.0,0.0,null,455.0,455.0,0.0],["USBP","GZ.X.L3.2-00.GCPIG","L3 glazing - 2-00 GCP insulated make-up","DOMWNG","1",0.0,0.0,0.0,0.0,0.0,null,820.0,820.0,0.0],["USBP","GZ.X.L8.3-15.AGIG","L8 glazing - 3-15 AGIG make-up","DOMWNG","1",0.0,0.0,0.0,0.0,0.0,null,2905.0,2905.0,0.0],["USBP","USAD1000","USAD1000 - Bullet resistant door","DOMDR","1",49.0,342.0,0.0,0.0,49.0,7100.0,7100.0,7100.0,347900.0],["USBP","USAW400B","USAW400B - Bullet resistant window","DOMWND","1",0.0,0.0,0.0,0.0,0.0,null,8010.0,8010.0,0.0],["USBP","USAW800","USAW800 - Bullet resistant steel window","DOSWND","1",0.0,0.0,0.0,0.0,0.0,null,1402.0,1402.0,0.0]]},"mask":[{"decision":"MASK","object":"ICILOC","column":"TOTALCOST","reason":"Sage: IC group IEINTERN lacks \"Cost Inquiry\""},{"decision":"MASK","object":"ICILOC","column":"RECENTCOST","reason":"Sage: IC group IEINTERN lacks \"Cost Inquiry\""},{"decision":"MASK","object":"ICILOC","column":"STDCOST","reason":"Sage: IC group IEINTERN lacks \"Cost Inquiry\""}],"masked_columns":["AvgCost","RecentCost","StdCost","TotalCost"],"refusals":{"stockroom_USBP":"[sage] Sage user INVOFF1 has no OE security group in company USBP (User Authorizations), so vOEPostingJournals is not readable"}};
+const NOAUTH = (u, c) => '[sage] Sage user ' + u + ' has no authorizations in company ' + c + ' (User Authorizations screen is empty for this company): the company cannot be opened';
+const CO = {QUIK:'QUIKSERV INC.', USBP:'UNITED STATES BULLET PROOFING, INC.', USBTST:'zTest - United States Bullet Proofing, Inc.'};
+const open = (ic) => ({open:true, cost_visible:{OE:ic, IC:ic}});
+const shut = (u, c) => ({open:false, reason: NOAUTH(u, c)});
+const DEMO_ROLES = [
+  {id:'salesmanager', role:'Inside sales manager', expect:'QUIK and USBTST open, costs visible; USBP refused', label:'Inside sales manager (OE FULL)', user:'INSALES1',
+   companies:{QUIK:open(true), USBP:shut('INSALES1','USBP'), USBTST:open(true)}},
+  {id:'controller', role:'Controller, full rights', expect:'every built company open, costs visible', label:'Controller (full rights)', user:'CCONTROLLER',
+   companies:{QUIK:open(true), USBP:open(true), USBTST:open(true)}},
+  {id:'intern', role:'IE intern, inquiry only', expect:'QUIK open with cost columns masked; USBP refused', label:'IE intern (inquiry only, no cost)', user:'INTERN',
+   companies:{QUIK:open(false), USBP:shut('INTERN','USBP'), USBTST:shut('INTERN','USBTST')}},
+  {id:'stockroom', role:'Inventory office, USBP only', expect:'USBP open with costs; QUIK refused by Sage', label:'Inventory office, USBP only', user:'INVOFF1',
+   companies:{QUIK:shut('INVOFF1','QUIK'), USBP:{open:true, cost_visible:{OE:false, IC:true}}, USBTST:shut('INVOFF1','USBTST')}},
+  {id:'leftco', role:'Former employee', expect:'refused at sign-in: account disabled', label:'Former employee', disabled:'[sage] Sage user LEFTCO: "Account is disabled" is ticked'}
+];
+Object.values(DEMO_ROLES).forEach(r => { Object.entries(r.companies || {}).forEach(([c, info]) => { info.name = CO[c]; }); });
+
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const fmt2 = new Intl.NumberFormat(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtQ = new Intl.NumberFormat(undefined, {maximumFractionDigits:2});
+const money = v => (typeof v === 'number') ? fmt2.format(v) : '—';
+const qty = v => (typeof v === 'number') ? fmtQ.format(v) : '—';
+
+let mcp = null;          // namespace from claude.use('mcp'), or null
+let mode = 'connecting'; // connecting | live | demo | blocked
+let me = null;           // whoami payload (or demo role)
+let demoRole = null;
+let retried = false;
+let lastArgs = null;     // arguments of the last successful lookup, for "Why?"
+
+/* ---------- status + sections ---------- */
+function setStatus(text, kind){ const s = $('status'); s.textContent = text; s.className = 'pill' + (kind ? ' ' + kind : ''); }
+function show(id, on){ $(id).hidden = !on; }
+function clearResults(){ ['error','metrics','masked','tablewrap','rowsNote'].forEach(id => show(id,false)); }
+
+/* ---------- connection states (branch on code, never on message text) ---------- */
+function connectPanel(html, actions){
+  const c = $('connect'); c.replaceChildren();
+  const n = el('div','notice'); n.append(html);
+  if (actions && actions.length){ const row = el('div','row'); actions.forEach(a => row.append(a)); n.append(row); }
+  c.append(n); show('connect', true);
+}
+function demoButton(){ const b = el('button','btn small','Open the demo snapshot instead'); b.type='button'; b.onclick = () => { demoRole = null; me = null; enterDemo(); }; return b; }
+function retryButton(fn){ const b = el('button','btn small','Try again'); b.type='button'; b.onclick = fn; return b; }
+function handleConnectError(e, again){
+  const code = (e && e.code) || 'upstream_error';
+  const msg = (e && e.message) || '';
+  switch (code) {
+    case 'needs_reauth':
+      setStatus('Reconnect needed','warn'); mode='blocked'; hideLookup();
+      connectPanel('Your connection to ' + SERVER + ' has lapsed. Reconnect it in claude.ai Settings → Connectors, then try again.', [retryButton(again), demoButton()]); break;
+    case 'server_not_connected': case 'selection_required': case 'server_not_found':
+      setStatus('Connector not added','warn'); mode='blocked'; hideLookup();
+      connectPanel('Add the connector named “' + SERVER + '” in claude.ai Settings → Connectors and sign in to it with your own Sage login. If you have two connectors with that name, choose one.', [retryButton(again), demoButton()]); break;
+    case 'not_in_manifest':
+      setStatus('Not allowed here','bad'); mode='blocked'; hideLookup();
+      connectPanel('This page may not use ' + SERVER + ' for you: the connector was declined or switched off for this page. Turn it back on for the page to continue.', [demoButton()]); break;
+    case 'blocked_by_policy':
+      setStatus('Blocked by policy','bad'); mode='blocked'; hideLookup();
+      connectPanel('Your organisation blocks this tool for your account. Rights come from ' + HUMANS.access + '.', [demoButton()]); break;
+    case 'approval_required':
+      setStatus('Needs your approval','warn'); mode='blocked'; hideLookup();
+      connectPanel('Reading your Sage rights needs your approval. Allow it when claude.ai asks.', [retryButton(again), demoButton()]); break;
+    case 'server_unavailable': case 'rate_limited': case 'upstream_error':
+      if (e && e.retryable && !retried){ retried = true; setStatus('Retrying…'); setTimeout(again, (e.retryAfterMs || 800) + Math.random()*600); break; }
+      setStatus('Sage MCP unreachable','bad'); mode='blocked'; hideLookup();
+      connectPanel('The Sage MCP server did not answer. Try again in a moment; if it keeps failing, tell the platform champion.', [retryButton(again), demoButton()]); break;
+    case 'tool_error':
+      setStatus('Sage said no','bad'); mode='blocked'; hideLookup();
+      connectPanel(sageSaidNo(msg), [demoButton()]); break;
+    case 'not_granted': case 'capability_disabled': case 'capability_removed':
+      noMcp(); break;
+    default:
+      setStatus('Unavailable','bad'); mode='blocked'; hideLookup();
+      connectPanel('Something went wrong talking to ' + SERVER + ' (' + code + ').', [retryButton(again), demoButton()]);
+  }
+}
+function sageSaidNo(msg){
+  const f = document.createDocumentFragment();
+  f.append(el('b',null,'Sage said no. ')); f.append(document.createTextNode(msg));
+  f.append(el('br'));
+  f.append(el('span','small','This page does not work around a refusal. Rights for data you cannot see come from ' + HUMANS.access + '; data no view holds is a request to ' + HUMANS.views + '.'));
+  return f;
+}
+function noMcp(){
+  mode='blocked'; hideLookup(); setStatus('No connector in this view','warn');
+  connectPanel('Connectors are not available in this view (outside the organisation, or opened where connectors cannot run). The live lookup needs the ' + SERVER + ' connector.', [demoButton()]);
+}
+function hideLookup(){ ['access','lookup','try','hint'].forEach(id => show(id,false)); clearResults(); }
+
+/* ---------- live mode ---------- */
+async function connectLive(){
+  show('connect', false); show('demoPanel', false); $('leaveDemo').hidden = true;
+  setStatus('Checking your Sage rights…');
+  try {
+    const r = await mcp.callTool(SERVER, 'whoami', {});
+    me = r.payload; mode = 'live'; demoRole = null; retried = false;
+    setStatus('Signed in as ' + (me.label || me.token_id || 'you'), 'ok');
+    renderAccess();
+  } catch (e) { handleConnectError(e, connectLive); }
+}
+
+/* ---------- demo mode ---------- */
+function enterDemo(){
+  mode = 'demo'; show('connect', false); hideLookup();
+  setStatus('Demo mode · mock estate','warn');
+  $('leaveDemo').hidden = !mcp;
+  const ul = $('demoRoles'); ul.replaceChildren();
+  DEMO_ROLES.forEach(r => {
+    const li = el('li'); const main = el('div','demo-main');
+    main.append(el('div','demo-role', r.role)); main.append(el('code', null, 'sage-mock-' + r.id));
+    main.append(el('div','small muted', r.expect)); li.append(main);
+    const b = el('button','btn small', demoRole === r ? 'Signed in' : 'Sign in'); b.type='button'; b.onclick = () => pickDemoRole(r); li.append(b);
+    ul.append(li);
+  });
+  show('demoPanel', true);
+}
+function pickDemoRole(r){
+  clearResults();
+  if (r.disabled){
+    demoRole = null; me = null; hideLookup(); show('demoPanel', true);
+    setStatus('Refused at sign-in','bad'); showError(r.disabled); return;
+  }
+  demoRole = r; me = {label: r.label, companies: r.companies};
+  enterDemo(); setStatus('Demo · ' + r.label, 'warn'); renderAccess();
+}
+
+/* ---------- shared rendering ---------- */
+function companies(){ return Object.entries((me && me.companies) || {}).map(([code, info]) => Object.assign({code}, info)); }
+function renderAccess(){
+  const cs = companies(); const a = $('access'); a.replaceChildren();
+  cs.forEach(c => {
+    const costs = c.cost_visible && typeof c.cost_visible === 'object' ? (c.cost_visible.IC ? 'visible' : 'masked') : null;
+    const s = el('span', 'chip ' + (c.open ? 'ok' : 'off'), c.code + (c.open ? ' · open' + (costs ? ' · costs ' + costs : '') : ' · no access'));
+    s.title = c.open ? (c.name + (costs ? ' · I/C costs ' + costs : '')) : (c.reason || '');
+    a.append(s);
+  });
+  show('access', cs.length > 0);
+  const sel = $('company'); const prev = sel.value; sel.replaceChildren();
+  cs.filter(c => c.open).forEach(c => { const o = el('option', null, c.code + ' · ' + c.name); o.value = c.code; sel.append(o); });
+  if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+  show('lookup', true); show('hint', true);
+  const t = $('try'); t.replaceChildren(); t.append('Try: ');
+  let first = true;
+  cs.filter(c => c.open && SAMPLES[c.code]).forEach(c => {
+    if (!first) t.append(' · '); first = false; t.append(c.code + ' ');
+    SAMPLES[c.code].forEach(([item, loc], i) => {
+      if (i) t.append(', ');
+      const a2 = el('a', null, item + (loc ? ' at ' + loc : '')); a2.href = '#'; a2.onclick = ev => { ev.preventDefault(); $('company').value = c.code; $('item').value = item; $('location').value = loc; lookup(); };
+      t.append(a2);
+    });
+  });
+  const closed = cs.filter(c => !c.open);
+  if (closed.length){ t.append(' — or ask for one marked “no access” to see Sage refuse: ');
+    closed.slice(0,2).forEach((c, i) => { if (i) t.append(', '); const a3 = el('a', null, c.code); a3.href='#'; a3.onclick = ev => { ev.preventDefault(); lookup(c.code); }; t.append(a3); }); }
+  show('try', !first);
+}
+function showError(msg){
+  const d = $('error'); d.replaceChildren(); const n = el('div','notice bad'); n.setAttribute('role','alert'); n.append(sageSaidNo(msg)); d.append(n); show('error', true);
+}
+
+/* ---------- lookup ---------- */
+function demoResult(args){
+  const c = demoRole.companies[args.company];
+  if (!c || !c.open) throw {code:'tool_error', message: (c && c.reason) || NOAUTH(demoRole.user, args.company)};
+  const src = DEMO.rows[args.company === 'USBTST' ? 'USBP' : args.company] || [];
+  const cols = DEMO.columns; const ii = cols.indexOf('ItemNo'), li = cols.indexOf('Location'), ci = cols.indexOf('Company');
+  let rows = src.filter(r => (!args.item || String(r[ii]).toUpperCase().startsWith(args.item)) && (!args.location || String(r[li]) === args.location))
+                .map(r => { const x = r.slice(); x[ci] = args.company; return x; });
+  const masked = c.cost_visible && !c.cost_visible.IC ? DEMO.masked_columns.slice() : [];
+  if (masked.length) rows = rows.map(r => r.map((v, i) => masked.includes(cols[i]) ? null : v));
+  return {columns: cols, rows, row_count: rows.length, truncated: false, masked_columns: masked, trace: masked.length ? DEMO.mask : []};
+}
+async function lookup(forceCompany){
+  const args = {company: (forceCompany || $('company').value || '').trim().toUpperCase(),
+                item: ($('item').value || '').trim().toUpperCase(), location: ($('location').value || '').trim()};
+  if (!args.company) return;
+  $('item').value = args.item; clearResults(); show('hint', false);
+  const btn = $('go'); btn.disabled = true; btn.textContent = 'Looking up…';
+  const input = {company: args.company, limit: 500}; if (args.item) input.item = args.item; if (args.location) input.location = args.location;
+  try {
+    if (mode === 'demo'){ renderResult(demoResult(args), args, null); }
+    else {
+      const r = await mcp.callTool(SERVER, TOOL, input, {cache:{staleTime:60000, gcTime:300000}});
+      renderResult(r.payload, args, r.cache ? r.cache.storedAt : null);
+    }
+    lastArgs = input;
+  } catch (e) {
+    const code = (e && e.code) || 'upstream_error';
+    if (code === 'tool_error') showError(e.message || 'refused');
+    else if (['needs_reauth','server_not_connected','selection_required','not_in_manifest','blocked_by_policy','approval_required','not_granted','capability_disabled','capability_removed'].includes(code)) handleConnectError(e, connectLive);
+    else { const d = $('error'); d.replaceChildren(); const n = el('div','notice bad'); n.append(el('b',null,'Sage MCP did not answer. ')); n.append('Nothing was changed; try the lookup again.' + (e && e.message ? ' (' + e.message + ')' : '')); d.append(n); show('error', true); }
+  } finally { btn.disabled = false; btn.textContent = 'Look up'; }
+}
+
+function renderResult(res, args, storedAt){
+  if (!res || typeof res !== 'object' || !Array.isArray(res.rows) || !Array.isArray(res.columns)){ showError('The tool returned an unexpected shape.'); return; }
+  const cols = res.columns, rows = res.rows;
+  const masked = new Set(res.masked_columns || []);
+  const ix = name => cols.indexOf(name);
+  const items = new Set(rows.map(r => r[ix('ItemNo')]));
+  const sum = name => masked.has(name) ? null : rows.reduce((s, r) => s + (typeof r[ix(name)] === 'number' ? r[ix(name)] : 0), 0);
+  const m = $('metrics'); m.replaceChildren();
+  const metric = (n, l, sub, isMasked) => { const d = el('div','metric'); d.append(el('span','n' + (isMasked ? ' masked' : ''), n)); d.append(el('span','l',l)); d.append(el('span','s',sub || ' ')); return d; };
+  m.append(metric(String(items.size), 'items' + (args.item ? ' starting ' + args.item : ''), rows.length + ' item-location lines'));
+  m.append(metric(qty(sum('QtyOnHand')), 'quantity on hand', 'available ' + qty(sum('QtyAvailable'))));
+  m.append(metric(qty(sum('QtyOnSalesOrder')), 'on sales orders', 'on purchase orders ' + qty(sum('QtyOnPurchaseOrder'))));
+  const tc = sum('TotalCost');
+  m.append(tc == null ? metric('masked by Sage', 'stock value', 'cost columns hidden for your role', true) : metric(money(tc), 'stock value', 'sum of total cost per location'));
+  show('metrics', true);
+  if (masked.size){
+    const n = $('masked'); n.replaceChildren();
+    n.append('Columns masked by Sage for your role: ' + [...masked].join(', ') + '. ');
+    const why = el('button','btn small','Why?'); why.type = 'button'; why.onclick = () => explain(res, args, why); n.append(why);
+    show('masked', true);
+  }
+  if (rows.length){
+    const t = $('table'); t.replaceChildren();
+    const thead = el('thead'); const tr = el('tr');
+    cols.forEach(c => { const th = el('th', (COST_COLS.has(c) || QTY_COLS.has(c) ? 'num' : '') + (masked.has(c) ? ' masked' : ''), label(c) + (masked.has(c) ? ' · masked' : '')); tr.append(th); });
+    thead.append(tr); t.append(thead);
+    const tb = el('tbody');
+    rows.forEach(r => { const row = el('tr'); r.forEach((v, i) => {
+      const c = cols[i];
+      const td = masked.has(c) ? el('td','masked','—') : el('td', (typeof v === 'number') ? 'num' : null, COST_COLS.has(c) ? money(v) : QTY_COLS.has(c) ? qty(v) : (v == null || v === '' ? '—' : String(v)));
+      row.append(td); }); tb.append(row); });
+    t.append(tb); show('tablewrap', true);
+    let note = rows.length + (rows.length === 1 ? ' line' : ' lines') + (res.truncated ? ' (first ' + rows.length + ' only; narrow the item number)' : '') + ' in ' + args.company + (args.location ? ', location ' + args.location : ', all locations') + '.';
+    if (storedAt) note += ' Last updated ' + new Date(storedAt).toLocaleTimeString() + '.';
+    if (mode === 'demo') note += ' Demo snapshot of the mock estate.';
+    $('rowsNote').textContent = note; show('rowsNote', true);
+  } else {
+    const d = $('error'); d.replaceChildren(); d.append(el('div','notice','No stocked item' + (args.item ? ' starting ' + args.item : '') + (args.location ? ' at location ' + args.location : '') + ' in ' + args.company + '.')); show('error', true);
+  }
+}
+function label(c){ return c.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^Qty /,'Qty ').toLowerCase().replace(/^./, s => s.toUpperCase()); }
+
+/* "Why?": the same call with explain:true, showing only the MASK decisions (live) or the snapshot's trace (demo) */
+async function explain(res, args, btn){
+  btn.disabled = true;
+  try {
+    let trace = res.trace;
+    if (mode !== 'demo'){ const r = await mcp.callTool(SERVER, TOOL, Object.assign({}, lastArgs || {company: args.company}, {explain: true, limit: 1}), {cache:{staleTime:60000, gcTime:300000}}); trace = (r.payload && r.payload.trace) || []; }
+    const masks = (trace || []).filter(t => t && t.decision && t.decision !== 'OK');
+    const n = $('masked'); const old = n.querySelector('.trace'); if (old) old.remove();
+    const ul = el('ul','trace');
+    if (!masks.length) ul.append(el('li', null, 'Sage returned no masking decision for this call.'));
+    masks.forEach(t => { const li = el('li'); li.append(el('code', null, t.decision + ' ' + (t.object || '') + '.' + (t.column || ''))); li.append(el('span', null, t.reason || '')); ul.append(li); });
+    n.append(ul); btn.remove();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Why? (could not ask Sage: ' + ((e && e.code) || 'error') + ')'; }
+}
+
+/* ---------- boot ---------- */
+$('lookup').addEventListener('submit', ev => { ev.preventDefault(); lookup(); });
+$('leaveDemo').onclick = () => { if (mcp) connectLive(); };
+function autoDemo(){ enterDemo(); pickDemoRole(DEMO_ROLES[0]); $('company').value = 'QUIK'; $('item').value = '9060'; $('location').value = ''; lookup(); }
+const use = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('mcp') : Promise.resolve(null);
+use.then(ns => { mcp = ns; if (location.hash === '#demo') { autoDemo(); return; } if (!mcp) { noMcp(); return; } connectLive(); }).catch(() => noMcp());
+})();
+</script>
