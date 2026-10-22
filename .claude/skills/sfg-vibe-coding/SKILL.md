@@ -117,6 +117,24 @@ Consequences for a tool you build:
 - The tool stores the token only in the user's browser cookie (`HttpOnly`, `Secure`, `SameSite=Lax`,
   path limited to the app, eight hours). Never in a file, a database, a log or the repo.
 
+### 2.5 Claude artifacts: the "SFG Sage 300" connector
+
+A tool can also be a published Claude artifact (an HTML page) instead of a Flask app. Then no token is
+pasted into the page: the page declares the `mcp` capability with the connector display name
+`SFG Sage 300` and the tools it calls, and claude.ai attaches each viewer's own sign-in. The MCP server
+fronts this with OAuth 2.1 + PKCE (`sage_mcp/oauth.py`): discovery at
+`https://44.218.227.134/.well-known/oauth-authorization-server`, dynamic client registration, and a
+sign-in page at `/mcp-login` where the person proves who they are with their Sage access token (on a
+real estate: the company identity provider). The opaque token the connector receives resolves to that
+person's Sage rights on every call, so the same two layers apply.
+
+- Server URL to give claude.ai: `https://44.218.227.134/mcp`. Each viewer adds the connector once
+  (Settings → Connectors → Add custom connector, name exactly `SFG Sage 300`), or an org admin adds it
+  for everyone. Only viewers inside the organisation can use it from a page.
+- The page branches on the error code, never on message text: `tool_error` is "Sage said no."; the
+  connector states (`needs_reauth`, `server_not_connected`, `approval_required`, …) get their own copy.
+- Reference page: https://claude.ai/artifact/9DK4Vk4zdDKDKx6ZjRSJxd (the customer-orders twin).
+
 ## 3. Build standards
 
 ### 3.1 Project layout
