@@ -57,8 +57,11 @@ tr:last-child td{border-bottom:0}
 
 /* demo panel (mock estate only) */
 .demo{margin-top:18px}
-.demo-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
-.demo-table th,.demo-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-.demo-table form{margin:0}
-.btn.small{padding:4px 10px;font-size:12px}
-.demo code,.demo-table code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.demo-list{list-style:none;margin:12px 0;padding:0;border-top:1px solid var(--line)}
+.demo-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.demo-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.demo-role{font-weight:600;font-size:14px}
+.demo-list form{margin:0;flex:none}
+.btn.small{padding:5px 12px;font-size:13px;white-space:nowrap}
+.demo code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere;align-self:flex-start}
+.demo p{overflow-wrap:anywhere}
