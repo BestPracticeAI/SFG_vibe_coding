@@ -21,6 +21,17 @@ HUMANS = {
     'views': 'the Sage champion named in the skill file (new views), with the project owner notified',
 }
 
+# Demo material shown inline on the pages (the estate is a mock with fictional role stand-ins; the demo
+# tokens are deterministic, see /home/ec2-user/mock-sage-300/sage_mcp/tokens.py). Remove on a real estate.
+DEMO_TOKENS = [
+    ('sage-mock-salesmanager', 'Inside sales manager', 'QUIK and USBTST open, costs visible; USBP refused'),
+    ('sage-mock-controller', 'Controller, full rights', 'every built company open, costs visible'),
+    ('sage-mock-intern', 'IE intern, inquiry only', 'QUIK open with cost columns masked; USBP refused'),
+    ('sage-mock-stockroom', 'Inventory office, USBP only', 'USBP open; QUIK refused by Sage'),
+    ('sage-mock-leftco', 'Former employee', 'refused at sign-in: account disabled'),
+]
+DEMO_CUSTOMERS = {'QUIK': ['05-13615', '13-18996', '16-21380'], 'USBP': ['CUT001'], 'USBTST': ['CUT001']}
+
 bp = Blueprint('orders', __name__, url_prefix=PREFIX or None)
 
 
@@ -106,6 +117,10 @@ def index():
 def create_app():
     app = Flask(__name__, static_url_path=(PREFIX or '') + '/static')
     app.register_blueprint(bp)
+
+    @app.context_processor
+    def _demo():
+        return {'demo_tokens': DEMO_TOKENS, 'demo_customers': DEMO_CUSTOMERS}
 
     @app.template_filter('label')
     def label(col):

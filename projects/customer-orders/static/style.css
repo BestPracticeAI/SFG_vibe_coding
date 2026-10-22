@@ -54,3 +54,11 @@ th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 td.num{text-align:right;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:0}
 @media (max-width:600px){.foot .in{flex-direction:column;align-items:flex-start;gap:4px}}
+
+/* demo panel (mock estate only) */
+.demo{margin-top:18px}
+.demo-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+.demo-table th,.demo-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.demo-table form{margin:0}
+.btn.small{padding:4px 10px;font-size:12px}
+.demo code,.demo-table code{font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}

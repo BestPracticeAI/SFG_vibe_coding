@@ -167,3 +167,12 @@ def test_live_dashboard_end_to_end(client):
     assert 'orders for CUT001' in html and '100,516.36' in html and 'USBP · open' in html
     html = client.get(PREFIX + '/?company=USBP&customer=NOSUCH').data.decode()
     assert 'No orders for NOSUCH in USBP' in html
+
+
+def test_demo_tokens_and_samples_are_inline(client, monkeypatch):
+    r = client.get(PREFIX + '/')
+    assert b'sage-mock-salesmanager' in r.data and b'05-13615' in r.data and b'CUT001' in r.data
+    calls = fake(monkeypatch, lambda token, name, args: FAKE_WHOAMI if name == 'whoami' else FAKE_HISTORY)
+    client.post(PREFIX + '/signin', data={'token': 'good-token'})
+    r = client.get(PREFIX + '/')
+    assert b'Try:' in r.data and b'05-13615' in r.data

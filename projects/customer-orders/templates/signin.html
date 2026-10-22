@@ -11,6 +11,21 @@
     <input id="token" name="token" type="password" autocomplete="off" required placeholder="paste your token">
     <button class="btn" type="submit">Sign in</button>
   </form>
-  <p class="small muted">No token? Ask the platform champion named in the skill file. The token is kept in a browser cookie for 8 hours and sent only to this app.</p>
+  <p class="small muted">No token? Ask the Sage administrator named in the skill file. The token is kept in a browser cookie for 8 hours and sent only to this app.</p>
+</section>
+
+<section class="card narrow demo">
+  <p class="eyebrow">Live demo · mock Sage 300 estate</p>
+  <p class="small">These tokens stand in for Microsoft 365 sign-in. Each one carries a fictional role's Sage rights; click to sign in as that role.</p>
+  <table class="demo-table">
+    <tr><th>Token</th><th>Role</th><th>What Sage allows</th><th></th></tr>
+    {% for tok, role, expect in demo_tokens %}
+    <tr>
+      <td><code>{{ tok }}</code></td><td>{{ role }}</td><td>{{ expect }}</td>
+      <td><form method="post" action="{{ url_for('orders.signin') }}"><input type="hidden" name="token" value="{{ tok }}"><button class="btn small" type="submit">Sign in</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="small muted">Sample customers: {% for co, custs in demo_customers.items() %}{{ co }} {% for c in custs %}<code>{{ c }}</code>{% if not loop.last %}, {% endif %}{% endfor %}{% if not loop.last %} · {% endif %}{% endfor %}.</p>
 </section>
 {% endblock %}

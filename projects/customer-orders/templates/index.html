@@ -24,6 +24,7 @@
   <label class="check"><input type="checkbox" name="quotes" value="1" {{ 'checked' if q.quotes }}> include quotes</label>
   <button class="btn" type="submit">Look up</button>
 </form>
+<p class="small muted demo">Try: {% for c in companies if c.open and c.code in demo_customers %}{{ c.code }} {% for cust in demo_customers[c.code] %}<a href="{{ url_for('orders.index', company=c.code, customer=cust, quotes=1) }}">{{ cust }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% if not loop.last %} · {% endif %}{% endfor %} — or switch the company in the address bar to one marked “no access” to see Sage refuse.</p>
 {% endif %}
 
 {% if error %}
